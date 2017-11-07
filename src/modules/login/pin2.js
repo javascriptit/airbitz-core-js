@@ -1,6 +1,6 @@
 // @flow
 import { decrypt, encrypt, hmacSha256 } from '../../util/crypto/crypto.js'
-import { base64 } from '../../util/encoding.js'
+import { base64, utf8 } from '../../util/encoding.js'
 import type { ApiInput } from '../root.js'
 import { authRequest } from './authServer.js'
 import type { LoginStash, LoginTree } from './login-types.js'
@@ -8,11 +8,12 @@ import { applyLoginReply, makeLoginTree, searchTree } from './login.js'
 import { fixUsername } from './loginStore.js'
 
 function pin2Id (pin2Key: Uint8Array, username: string) {
-  return hmacSha256(fixUsername(username), pin2Key)
+  const data = utf8.parse(fixUsername(username))
+  return hmacSha256(data, pin2Key)
 }
 
 function pin2Auth (pin2Key, pin) {
-  return hmacSha256(pin, pin2Key)
+  return hmacSha256(utf8.parse(pin), pin2Key)
 }
 
 /**
