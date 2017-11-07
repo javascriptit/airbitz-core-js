@@ -4,7 +4,7 @@ import { mapFiles } from 'disklet'
 import type { FixedIo } from '../../io/fixIo.js'
 import { base58, base64 } from '../../util/encoding.js'
 import type { ApiInput } from '../root.js'
-import { scrypt, userIdSnrp } from '../scrypt/selectors.js'
+import { scrypt, userIdSnrp } from '../scrypt/scrypt-selectors.js'
 import type { LoginStash } from './login-types.js'
 
 function getJsonFiles (folder) {
@@ -107,10 +107,9 @@ const userIdCache = {}
  * Hashes a username into a userId.
  */
 export function hashUsername (ai: ApiInput, username: string) {
-  const { state } = ai.props
   const fixedName = fixUsername(username)
   if (userIdCache[fixedName] == null) {
-    userIdCache[fixedName] = scrypt(state, fixedName, userIdSnrp)
+    userIdCache[fixedName] = scrypt(ai, fixedName, userIdSnrp)
   }
   return userIdCache[fixedName]
 }

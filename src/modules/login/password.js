@@ -3,7 +3,7 @@ import { decrypt, encrypt } from '../../util/crypto/crypto.js'
 import { rejectify } from '../../util/decorators.js'
 import { base64 } from '../../util/encoding.js'
 import type { ApiInput } from '../root.js'
-import { makeSnrp, scrypt, userIdSnrp } from '../scrypt/selectors.js'
+import { makeSnrp, scrypt, userIdSnrp } from '../scrypt/scrypt-selectors.js'
 import { authRequest } from './authServer.js'
 import type { LoginKit, LoginStash, LoginTree } from './login-types.js'
 import { applyLoginReply, makeLoginTree, syncLogin } from './login.js'
@@ -24,13 +24,11 @@ function extractLoginKey (
   username: string,
   password: string
 ) {
-  const state = ai.props.state
-
   if (stash.passwordBox == null || stash.passwordKeySnrp == null) {
     throw new Error('Missing data for offline password login')
   }
   const up = makeHashInput(username, password)
-  return scrypt(state, up, stash.passwordKeySnrp).then(passwordKey => {
+  return scrypt(ai, up, stash.passwordKeySnrp).then(passwordKey => {
     return decrypt(stash.passwordBox, passwordKey)
   })
 }
@@ -39,10 +37,9 @@ function extractLoginKey (
  * Fetches the loginKey from the server.
  */
 function fetchLoginKey (ai: ApiInput, username: string, password: string) {
-  const state = ai.props.state
   const up = makeHashInput(username, password)
   const userId = hashUsername(ai, username)
-  const passwordAuth = scrypt(state, up, passwordAuthSnrp)
+  const passwordAuth = scrypt(ai, up, passwordAuthSnrp)
 
   return Promise.all([userId, passwordAuth]).then(values => {
     const [userId, passwordAuth] = values
@@ -55,7 +52,7 @@ function fetchLoginKey (ai: ApiInput, username: string, password: string) {
       if (reply.passwordBox == null || reply.passwordKeySnrp == null) {
         throw new Error('Missing data for online password login')
       }
-      return scrypt(state, up, reply.passwordKeySnrp).then(passwordKey => {
+      return scrypt(ai, up, reply.passwordKeySnrp).then(passwordKey => {
         return {
           loginKey: decrypt(reply.passwordBox, passwordKey),
           loginReply: reply
@@ -108,11 +105,9 @@ export function checkPassword (
   login: LoginTree,
   password: string
 ) {
-  const state = ai.props.state
-
   // Derive passwordAuth:
   const up = makeHashInput(login.username, password)
-  return scrypt(state, up, passwordAuthSnrp).then(passwordAuth => {
+  return scrypt(ai, up, passwordAuthSnrp).then(passwordAuth => {
     // Compare what we derived with what we have:
     for (let i = 0; i < passwordAuth.length; ++i) {
       if (passwordAuth[i] !== login.passwordAuth[i]) {
@@ -162,18 +157,18 @@ export function makePasswordKit (
   password: string
 ): Promise<LoginKit> {
   const up = makeHashInput(username, password)
-  const { state, io } = ai.props
+  const { io } = ai.props
 
   // loginKey chain:
-  const boxPromise = makeSnrp(state).then(passwordKeySnrp => {
-    return scrypt(state, up, passwordKeySnrp).then(passwordKey => {
+  const boxPromise = makeSnrp(ai).then(passwordKeySnrp => {
+    return scrypt(ai, up, passwordKeySnrp).then(passwordKey => {
       const passwordBox = encrypt(io, login.loginKey, passwordKey)
       return { passwordKeySnrp, passwordBox }
     })
   })
 
   // authKey chain:
-  const authPromise = scrypt(state, up, passwordAuthSnrp).then(passwordAuth => {
+  const authPromise = scrypt(ai, up, passwordAuthSnrp).then(passwordAuth => {
     const passwordAuthBox = encrypt(io, passwordAuth, login.loginKey)
     return { passwordAuth, passwordAuthBox }
   })
