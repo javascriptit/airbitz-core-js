@@ -7,8 +7,6 @@ import type {
 
 import type { FixedIo } from '../io/fixIo.js'
 
-export { addStorageWallet, syncStorageWallet } from './storage/actions.js'
-
 /**
  * The account fires this when it loads its keys from disk.
  */

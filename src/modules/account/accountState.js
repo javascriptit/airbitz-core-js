@@ -1,5 +1,4 @@
 import { createReaction } from '../../util/redux/reaction.js'
-import * as ACTIONS from '../actions.js'
 import {
   getCurrencyPlugin,
   waitForCurrencyPlugins,
@@ -17,7 +16,8 @@ import { applyKit, searchTree, syncLogin } from '../login/login.js'
 import { makePasswordKit } from '../login/password.js'
 import { makePin2Kit } from '../login/pin2.js'
 import { makeRecovery2Kit } from '../login/recovery2.js'
-import { getStorageWalletLastSync } from '../selectors.js'
+import { addStorageWallet } from '../storage/actions.js'
+import { getStorageWalletLastSync } from '../storage/selectors.js'
 import { changeKeyStates, loadAllKeyStates } from './keyState.js'
 
 export function findAppLogin (loginTree, appId) {
@@ -289,9 +289,7 @@ export async function makeAccountState (ai, appId, loginTree, callbacks) {
       throw new Error(`Cannot find a "${type}" repo`)
     }
 
-    return dispatch(
-      ACTIONS.addStorageWallet(keyInfo, ai.props.onError)
-    ).then(() => {
+    return dispatch(addStorageWallet(keyInfo, ai.props.onError)).then(() => {
       const account = new AccountState(ai, appId, loginTree, keyInfo, callbacks)
       const disposer = dispatch(
         createReaction(

@@ -4,7 +4,7 @@ import { mapFiles } from 'disklet'
 import type { FixedIo } from '../../io/fixIo.js'
 import { base58, base64 } from '../../util/encoding.js'
 import type { ApiInput } from '../root.js'
-import { scrypt, userIdSnrp } from '../selectors.js'
+import { scrypt, userIdSnrp } from '../scrypt/selectors.js'
 import type { LoginStash } from './login-types.js'
 
 function getJsonFiles (folder) {
