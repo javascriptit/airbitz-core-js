@@ -1,5 +1,4 @@
 // @flow
-import type { AbcCurrencyPlugin } from 'airbitz-core-types'
 import { buildReducer } from 'redux-keto'
 
 import type { FixedIo } from '../io/fixIo.js'
@@ -16,16 +15,6 @@ export interface RootState {
   currency: CurrencyState;
   io: FixedIo;
   login: LoginState;
-  onError: (e: Error) => void;
-  plugins: {
-    currencyPlugins: Array<AbcCurrencyPlugin>
-  };
-  currencyWallets: {
-    [walletId: string]: {
-      engine: any,
-      name: string
-    }
-  };
 }
 
 function io (state = {}, action: RootAction) {
